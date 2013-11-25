@@ -37,10 +37,35 @@ THE SOFTWARE.
        .twitter-follow-button {
         position: absolute !important;
       }
+
+      .bubble
+      {
+        position:absolute;
+        background:green;
+        float:left;     /* because the image at left */
+        display:none;
+      }
+      .bubbleborder
+      {
+        position:absolute;
+        top:0;
+        left:0;
+      }
+      .bubbletext
+      {
+        position:absolute;
+        top:0;
+        left:0;
+        width:200px;
+        height:170px;
+        padding:80px 16px 16px 16px;
+        text-align:center
+      }
     </style>
-    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
-    
+ 
     <!-- Engine Scripts -->
+
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script type="text/javascript" src="/com/common.js"></script>
     <script type="text/javascript" src="/com/particles/Range.js"></script>
     <script type="text/javascript" src="/com/particles/Particle.js"></script>
@@ -160,12 +185,16 @@ THE SOFTWARE.
       this.xD = 1;
       this.tileX = null;
       this.tileY = null;
-
+      this.img = x+ '_'+ y;
+      this.tileHeight = tileHeight;
+      this.tileWidth = tileWidth;
+      
       var pos = mapLayers[0].getXYCoords(this.x, this.y, false);
 
       this.tileX = pos.x;
       this.tileY = pos.y;
-
+      bubbleAt(pos.x, pos.y, this.tileHeight ,this.tileWidth, this.img , "I 'm bouncing Y.");
+          
       this.getPos = function(){
         return {x: this.tileX, y: this.tileY}
       },
@@ -185,6 +214,7 @@ THE SOFTWARE.
           if (mapLayers[0].getHeightMapTile(pos.x, pos.y) !== 0) {
             this.yD *= -1
             bounced = true;
+            //bubbleAt(pos.x, pos.y, this.img , "I 'm bouncing Y.");
           }
           
           pos = mapLayers[0].getXYCoords(this.x + this.xD, this.y);
@@ -192,12 +222,12 @@ THE SOFTWARE.
           this.tileY = pos.y;
 
           if (mapLayers[0].getHeightMapTile(pos.x, pos.y) !== 0) {
-            this.xD *= -1
+            this.xD *= -1;
+             //bubbleAt(pos.x, pos.y, this.img , "I 'm bouncing X."); 
           }
 
           this.x += this.xD;
           this.y += this.yD;
-          
           context.restore();
       };
     }
@@ -245,15 +275,76 @@ THE SOFTWARE.
       this.init = function(settings) {
         mapLayers = settings.layers;
         this.draw();
+        console.log(objectImages.files);
         balls.push(new ProjectileObject(600, 380, 100, 50, objectImages.files["enemy2.png"]));
         balls.push(new ProjectileObject(770, 280, 100, 50, objectImages.files["enemy1.png"]));
         balls.push(new ProjectileObject(570, 180, 100, 50, objectImages.files["enemy3.png"]));
       }
       
     }
+
+    function drawBubble(ctx, x, y, w, h, radius)
+    {
+      var r = x + w;
+      var b = y + h;
+      ctx.beginPath();
+      ctx.strokeStyle="black";
+      ctx.lineWidth="2";
+      ctx.moveTo(x+radius, y);
+      ctx.lineTo(x+radius/2, y-10);
+      ctx.lineTo(x+radius * 2, y);
+      ctx.lineTo(r-radius, y);
+      ctx.quadraticCurveTo(r, y, r, y+radius);
+      ctx.lineTo(r, y+h-radius);
+      ctx.quadraticCurveTo(r, b, r-radius, b);
+      ctx.lineTo(x+radius, b);
+      ctx.quadraticCurveTo(x, b, x, b-radius);
+      ctx.lineTo(x, y+radius);
+      ctx.quadraticCurveTo(x, y, x+radius, y);
+      ctx.stroke();
+    }
+    function dispQuote() 
+    {
+      var canvas = document.getElementById('canvasbubble');
+      var ctx = canvas.getContext('2d'); 
+      drawBubble(ctx, 10,60,220, 90, 20);
+    }
+    function bubbleAt(x,y,id, tileHeight, tileWidth, msg) 
+    {
+      //id = id + count++;
+      if ( jQuery('#canvasbubble_'+ id ).length == 0 ){
+        var bubble = jQuery('<div class="bubble" id="bb_'+ id + '" >'+
+        '<canvas id="canvasbubble_'+ id + '" class="bubbleborder" width="200" height="80" ></canvas>'+
+        '<div class="bubbletext">'+
+          msg +
+        '</div>'+
+        '</div>');
+        jQuery('body').append(bubble);
+      }
+      jQuery('#bb_'+ id ).css({
+        left:x*tileWidth, top: y*tileHeight
+      });
+      var canvas = document.getElementById('canvasbubble_'+ id );
+      //var canvas = jQuery('#bb_'+ id);
+      var ctx = canvas.getContext('2d'); 
+      drawBubble(ctx, x, y, 200, 50, 20);
+      jQuery('#bb_'+ id).show();
+      /*
+      setTimeout(function(){
+        jQuery('#bb_'+ id).remove();
+      },3000);*/
+    }
+    var count = 0;
     </script>
   </head>
+
   <body onLoad="launch()">
-    <a href="https://twitter.com/Beakable" class="twitter-follow-button" data-show-count="false">Follow @Beakable</a>
+    <div class="bubble">
+      <canvas id="canvasbubble" class="bubbleborder" width="200" height="80" ></canvas>
+      <div class="bubbletext">
+        Hello. I 'm finding my path. <br><i>Rokusoro Mishiba!.</i>
+      </div>
+    </div>
+ 
   </body>
 </html>
